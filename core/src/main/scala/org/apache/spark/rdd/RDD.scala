@@ -122,6 +122,42 @@ abstract class RDD[T: ClassManifest](
     this
   }
 
+  /** added optimizer: */
+  var optimizerEnabled = true;
+
+  def enableAutotuning() ={
+    optimizerEnabled = true;
+  }
+
+  def disableAutotuning() = {
+    optimizerEnabled = false;
+  }
+
+
+  /* optimizer code */
+  def estimateNumberUniqueKeys(samples: Array[_]) = {
+    val splitArray = samples.splitAt(samples.length/2);
+
+    val totalUK = findNumberOfUniqueKeys(samples);
+    val firstSplitUK = findNumberOfUniqueKeys(splitArray._1);
+    val secondSplitUK = findNumberOfUniqueKeys(splitArray._2);
+
+    println("totalUK :"+ totalUK);
+
+    println("firstSplitUK :"+ firstSplitUK)
+    println("secondSplitUK :"+ secondSplitUK)
+
+    // +1 to avoid divide by zero
+    (firstSplitUK * secondSplitUK) / (((firstSplitUK + secondSplitUK) - totalUK) + 1)
+  }
+
+  def findNumberOfUniqueKeys(arr: Array[_]) = {
+    arr.toSet.size;
+  }
+
+
+
+
   /** User-defined generator of this RDD*/
   var generator = Utils.getCallSiteInfo.firstUserClass
 

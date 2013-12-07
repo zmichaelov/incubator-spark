@@ -308,7 +308,29 @@ class PairRDDFunctions[K: ClassManifest, V: ClassManifest](self: RDD[(K, V)])
    * parallelism level.
    */
   def reduceByKey(func: (V, V) => V): RDD[(K, V)] = {
-    reduceByKey(defaultPartitioner(self), func)
+    println("inside reduce by key with optimizer enabled?" + self.optimizerEnabled);
+    if(self.optimizerEnabled){
+      println("Running optimizer......");
+
+//      var samples = self.map(tuple => tuple._1).sample(false, 0.10, 20).collect();
+//      var estimatedUK = self.estimateNumberUniqueKeys(samples);
+//
+//      println("estimatedUK :"+ estimatedUK);
+
+      var percentageUK = self.distinct(30).count()/self.count();
+
+      println("The percent UK is " + percentageUK);
+
+      var reducerEst = math.round(12.4065* math.log(10.7996 * (percentageUK * 100)));
+
+      println("Optimized number of reducers(Lance needs this info): "+ reducerEst);
+
+      reduceByKey(func,reducerEst.toInt);
+    }
+    else{
+      reduceByKey(defaultPartitioner(self), func)
+    }
+
   }
 
   /**
