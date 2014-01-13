@@ -24,6 +24,7 @@ import scala.collection.Map
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
+import scala.reflect.ClassTag
 
 import org.apache.spark.{SparkEnv, Partition, TaskContext}
 import org.apache.spark.broadcast.Broadcast
@@ -33,7 +34,7 @@ import org.apache.spark.broadcast.Broadcast
  * An RDD that pipes the contents of each parent partition through an external command
  * (printing them one per line) and returns the output as a collection of strings.
  */
-class PipedRDD[T: ClassManifest](
+class PipedRDD[T: ClassTag](
     prev: RDD[T],
     command: Seq[String],
     envVars: Map[String, String],
@@ -95,7 +96,7 @@ class PipedRDD[T: ClassManifest](
 
     // Return an iterator that read lines from the process's stdout
     val lines = Source.fromInputStream(proc.getInputStream).getLines
-    return new Iterator[String] {
+    new Iterator[String] {
       def next() = lines.next()
       def hasNext = {
         if (lines.hasNext) {
